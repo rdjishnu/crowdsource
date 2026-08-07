@@ -1,0 +1,46 @@
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Node.js / React Web Dashboard
+web_dashboard/node_modules/
+web_dashboard/dist/
+web_dashboard/build/
+web_dashboard/.env.local
+web_dashboard/.env.*.local
+web_dashboard/npm-debug.log*
+
+# Flutter / Dart Citizen App
+citizen_app/.dart_tool/
+citizen_app/.flutter-plugins
+citizen_app/.flutter-plugins-dependencies
+citizen_app/.packages
+citizen_app/.pub-cache/
+citizen_app/.pub/
+citizen_app/build/
+citizen_app/ios/Pods/
+citizen_app/android/.gradle/
+citizen_app/android/app/build/
+
+# Java Spring Boot Backend
+backend/target/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.h2.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Python AI Microservice
+ai_microservice/__pycache__/
+ai_microservice/*.pyc
+ai_microservice/venv/
+ai_microservice/.venv/
+ai_microservice/env/
