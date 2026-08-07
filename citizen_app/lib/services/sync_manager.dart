@@ -81,8 +81,8 @@ class SyncManager {
               request.files.add(await http.MultipartFile.fromPath('photo', localImagePath));
             }
 
-            // Fast 1.5s connection timeout per candidate URL
-            final streamedResponse = await request.send().timeout(const Duration(milliseconds: 1500));
+            // 6s connection timeout for multipart file uploads
+            final streamedResponse = await request.send().timeout(const Duration(seconds: 6));
             final response = await http.Response.fromStream(streamedResponse);
 
             if (response.statusCode == 200 || response.statusCode == 201) {
@@ -91,7 +91,6 @@ class SyncManager {
               break;
             }
           } catch (e) {
-            // Fast failover to next candidate URL without error spam
             continue;
           }
         }
@@ -99,12 +98,10 @@ class SyncManager {
         if (uploadSuccess) {
           await OfflineDbHelper.removePendingUpload(pendingId);
           syncedCount++;
-        } else {
-          debugPrint('ℹ️ SyncManager: Server unreachable on current network. Retaining queued items in local SQLite database for auto-sync.');
         }
       }
     } catch (e) {
-      debugPrint('ℹ️ SyncManager notice: $e');
+      // Quiet failover
     } finally {
       _isFlushing = false;
     }

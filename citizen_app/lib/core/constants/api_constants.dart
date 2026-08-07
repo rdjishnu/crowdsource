@@ -21,10 +21,10 @@ class ApiConstants {
       ];
     } else if (!kIsWeb && Platform.isAndroid) {
       return [
-        'http://localhost:8080/api',   // USB ADB Reverse (Fastest for physical phone)
+        'http://10.0.2.2:8080/api',    // Android Emulator (Primary bridge to host)
         'http://127.0.0.1:8080/api',
-        'http://10.0.2.2:8080/api',    // Android Emulator
-        'http://10.10.64.29:8080/api', // Mac Local Wi-Fi
+        'http://localhost:8080/api',
+        'http://10.10.64.29:8080/api',
       ];
     } else {
       return [

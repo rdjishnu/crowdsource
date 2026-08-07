@@ -108,7 +108,6 @@ class _ReportScreenState extends State<ReportScreen> {
           _aiRejectionMessage = '';
         });
 
-        // Trigger AI Auto-Vision & Severity Analysis (Module 10.2)
         final aiResult = await _issueService.analyzeImageWithAi(picked);
 
         if (!mounted) return;
@@ -131,17 +130,25 @@ class _ReportScreenState extends State<ReportScreen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('🤖 AI Locked: "$detected" | Priority Severity: $sev/100'),
+              content: Text('🤖 AI Detected: "$detected" | Priority Score: $sev/100'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
             ),
           );
         } else {
-          // Strict UI Blocking for Non-Civic Images
+          final errorMsg = aiResult['message'] ?? 'Rejected: Image contains a person, animal, or non-civic object.';
           setState(() {
+            _selectedImage = null;
             _isAiValid = false;
-            _aiRejectionMessage = aiResult['message'] ?? 'Rejected: Image contains a person, animal, or non-civic object.';
+            _aiRejectionMessage = errorMsg;
           });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🚨 $errorMsg'),
+              backgroundColor: Colors.red.shade800,
+              duration: const Duration(seconds: 4),
+            ),
+          );
         }
       }
     } catch (e) {
@@ -165,7 +172,6 @@ class _ReportScreenState extends State<ReportScreen> {
     });
   }
 
-  /// Handles Submission logic based strictly on active network presence (Mobile Data or Wi-Fi = ONLINE)
   Future<void> _handleSubmit() async {
     if (_latitude == 0.0 && _longitude == 0.0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -202,7 +208,6 @@ class _ReportScreenState extends State<ReportScreen> {
         : desc;
     final fullAddress = _formattedAddress.isNotEmpty ? _formattedAddress : 'Lat: $_latitude, Long: $_longitude';
 
-    // 1. Check Network Connectivity (Mobile Data or Wi-Fi = ONLINE)
     final connectivityResults = await Connectivity().checkConnectivity();
     final bool hasActiveNetwork = connectivityResults.any((r) =>
         r == ConnectivityResult.mobile ||
@@ -210,13 +215,11 @@ class _ReportScreenState extends State<ReportScreen> {
         r == ConnectivityResult.ethernet
     );
 
-    // If strictly NO Mobile Data and NO Wi-Fi -> OFFLINE MODE!
     if (!hasActiveNetwork) {
       await _queueOfflineReport(fullDesc, fullAddress);
       return;
     }
 
-    // Network is AVAILABLE (Mobile Data or Wi-Fi is ON) -> Submit ONLINE!
     final result = await _issueService.submitIssue(
       category: _selectedCategory,
       description: fullDesc,
@@ -239,13 +242,11 @@ class _ReportScreenState extends State<ReportScreen> {
         _resetForm();
         widget.onSuccess?.call();
       } else {
-        // Queue silently in background if HTTP endpoint is temporarily unreachable
         await _queueSilentBackgroundReport(fullDesc, fullAddress);
       }
     }
   }
 
-  /// Triggered ONLY when device has ZERO Mobile Data & ZERO Wi-Fi
   Future<void> _queueOfflineReport(String fullDesc, String fullAddress) async {
     try {
       String localImagePath = '';
@@ -289,7 +290,6 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  /// Triggered when Mobile Data/Wi-Fi is ON but local IP endpoint is unreachable
   Future<void> _queueSilentBackgroundReport(String fullDesc, String fullAddress) async {
     try {
       String localImagePath = '';
@@ -350,7 +350,6 @@ class _ReportScreenState extends State<ReportScreen> {
           const Text('AI-First automated dispatch report to municipality officers', style: TextStyle(fontSize: 13, color: AppTheme.textMuted)),
           const SizedBox(height: 20),
 
-          // Prominent Live Hardware GPS Address Bar Card (Module 10.4 Lockdown)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -423,7 +422,6 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Location / Ward Name Input
           TextField(
             controller: _locationNameController,
             decoration: const InputDecoration(
@@ -435,7 +433,6 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Description Input
           TextField(
             controller: _descriptionController,
             maxLines: 3,
@@ -448,7 +445,6 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Photo Attachment & AI Shimmer Status (AI-First Paradigm)
           const Text('Attach Photo Evidence (AI Auto-Classification & Priority)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
           const SizedBox(height: 8),
           Row(
@@ -497,35 +493,68 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ],
 
-          // AI Auto-Classification & Priority Score Banner
           if (_selectedImage != null && _isAiValid && !_isAnalyzingAi) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0x1F10B981),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF10B981)),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF10B981), width: 1.5),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x3310B981),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.smart_toy, color: Color(0xFF10B981), size: 22),
-                      const SizedBox(width: 8),
-                      Text(
-                        '🤖 AI Detected: $_selectedCategory',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF047857)),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.remove_red_eye_outlined, color: Color(0xFF10B981), size: 22),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'ISSUE IDENTIFIED IN PHOTO 🔍',
+                          style: TextStyle(
+                            color: Color(0xFF34D399),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                        icon: const Icon(Icons.close, color: Colors.white70, size: 20),
                         onPressed: _clearImage,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 10),
+                  Text(
+                    _selectedCategory,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Container(
@@ -535,14 +564,14 @@ class _ReportScreenState extends State<ReportScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'Priority Severity: $_aiSeverityScore/100 ${_aiSeverityScore > 75 ? "🚨 EMERGENCY" : ""}',
+                          'Severity: $_aiSeverityScore/100 ${_aiSeverityScore > 75 ? "🚨 EMERGENCY" : ""}',
                           style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '(${_aiConfidence.toStringAsFixed(1)}% Confidence)',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
+                        'AI Confidence: ${_aiConfidence.toStringAsFixed(1)}%',
+                        style: const TextStyle(fontSize: 12, color: Color(0xCCFFFFFF), fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -551,7 +580,6 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ],
 
-          // Prominent Red Rejection Box for False-Positive Non-Civic Images
           if (!_isAiValid && _aiRejectionMessage.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(
@@ -596,7 +624,6 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ],
 
-          // Hidden/Optional Manual Category Override Button
           const SizedBox(height: 12),
           if (!_showManualDropdown)
             TextButton.icon(
@@ -621,7 +648,6 @@ class _ReportScreenState extends State<ReportScreen> {
 
           const SizedBox(height: 28),
 
-          // Submit Button (Strictly Disabled if _isAiValid == false or GPS not locked)
           _isSubmitting
               ? const Center(child: CircularProgressIndicator())
               : ElevatedButton.icon(

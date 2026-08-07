@@ -150,7 +150,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   ),
                 )
               : Column(
-                  children: _myIssues.take(3).map((item) {
+                  children: _myIssues.take(5).map((item) {
                     final cat = item['category'] ?? 'Issue';
                     final desc = item['description'] ?? '';
                     final status = item['status'] ?? 'Reported';

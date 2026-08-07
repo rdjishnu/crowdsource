@@ -124,9 +124,6 @@ const AuthenticatedDashboardContent = () => {
                         <StatCard title="Active In-Progress Fixes" value={inProgressCount} subtext="Units currently deployed in field" color="#8b5cf6" trend="Active Units" />
                     </div>
 
-                    {/* AI Neural Classifier Workspace */}
-                    <AiNeuralClassifierWorkspace onTriggerToast={triggerToast} />
-
                     {/* Seasonal Stress Trend Forecasting Chart */}
                     <TrendForecastingChart />
 
